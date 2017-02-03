@@ -8,11 +8,21 @@ import seedu.addressbook.data.exception.IllegalValueException;
  */
 public class Address {
 
-    public static final String EXAMPLE = "123, some street";
-    public static final String MESSAGE_ADDRESS_CONSTRAINTS = "Person addresses can be in any format";
-    public static final String ADDRESS_VALIDATION_REGEX = ".+";
+    public static final String EXAMPLE = "a/123, Clementi Ave 3, #12-34, 231534";
+    public static final String MESSAGE_ADDRESS_CONSTRAINTS = "Person addresses must be entered in the following"
+    		                                                + " format "+ "a/BLOCK, STREET, UNIT, POSTAL_CODE ";
+    public static final String ADDRESS_VALIDATION_REGEX = "[^,]*,[^,]+,[^,]+,[^,\n]+";
+    
+    public static final int INDEX_BLOCK = 0;
+    public static final int INDEX_STREET = 1;
+    public static final int INDEX_UNIT = 2;
+    public static final int INDEX_POSTALCODE = 3;
 
-    public final String value;
+    public final Block block;
+    public final Street street;
+    public final Unit unit;
+    public final PostalCode postalCode;
+    
     private boolean isPrivate;
 
     /**
@@ -22,11 +32,16 @@ public class Address {
      */
     public Address(String address, boolean isPrivate) throws IllegalValueException {
         String trimmedAddress = address.trim();
+        String[] splitTrimmedAddress = trimmedAddress.split(", ");
+        int addressLength = splitTrimmedAddress.length;
         this.isPrivate = isPrivate;
         if (!isValidAddress(trimmedAddress)) {
             throw new IllegalValueException(MESSAGE_ADDRESS_CONSTRAINTS);
         }
-        this.value = trimmedAddress;
+        this.block = addressLength > INDEX_BLOCK ? new Block(splitTrimmedAddress[INDEX_BLOCK]) : new Block("");
+        this.street = addressLength > INDEX_STREET ? new Street(splitTrimmedAddress[INDEX_STREET]) : new Street("");
+        this.unit = addressLength > INDEX_UNIT ? new Unit(splitTrimmedAddress[INDEX_UNIT]) : new Unit("");
+        this.postalCode = addressLength > INDEX_POSTALCODE ? new PostalCode(splitTrimmedAddress[INDEX_POSTALCODE]) : new PostalCode("");
     }
 
     /**
@@ -38,19 +53,24 @@ public class Address {
 
     @Override
     public String toString() {
-        return value;
+    	String address = block.getBlockNumber() + ", " + street.getStreet() + ", " + unit.getUnit() + ", " + 
+    			postalCode.getPostalCode();
+    	while (address.substring(address.length() - 2).equals(", ")) {
+    		 address = address.substring(0, address.length() - 2);
+    	}
+    	return address;
     }
 
     @Override
     public boolean equals(Object other) {
         return other == this // short circuit if same object
                 || (other instanceof Address // instanceof handles nulls
-                && this.value.equals(((Address) other).value)); // state check
+                && this.toString().equals(((Address) other).toString())); // state check
     }
 
     @Override
     public int hashCode() {
-        return value.hashCode();
+        return toString().hashCode();
     }
 
     public boolean isPrivate() {
